@@ -2,7 +2,7 @@
   "name": "InsightNest",
   "short_name": "InsightNest",
   "description": "Business sales and expense tracker",
-  "start_url": "/",
+  "start_url": "/insightnest/",
   "display": "standalone",
   "background_color": "#0f1a12",
   "theme_color": "#0f1a12",
