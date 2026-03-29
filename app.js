@@ -654,7 +654,7 @@ function renderGrowthRow(sales) {
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-  const thisMonth = sales.filter(r => new Date(r[0]) >= thisMonthStart)
+  const thisMonth = sales.filter(r => { const _d = parseDate(r[0]); return _d && new Date(_d.getFullYear(), _d.getMonth(), _d.getDate()) >= thisMonthStart; })
     .reduce((a, r) => a + (parseFloat(r[6]) || 0), 0);
   const lastMonth = sales.filter(r => {
     const d = new Date(r[0]);
@@ -689,8 +689,8 @@ function renderInsights(sales, exps) {
   // Growth trend
   const months = {};
   sales.forEach(r => {
-    const d = new Date(r[0]);
-    if (isNaN(d)) return;
+    const d = parseDate(r[0]);
+    if (!d) return;
     const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     months[key] = (months[key] || 0) + (parseFloat(r[6]) || 0);
   });
@@ -747,12 +747,12 @@ function renderInsights(sales, exps) {
 function renderMonthlyChart(sales, exps) {
   const revByMonth = {}, expByMonth = {};
   sales.forEach(r => {
-    const d = new Date(r[0]); if (isNaN(d)) return;
+    const d = parseDate(r[0]); if (!d) return;
     const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     revByMonth[k] = (revByMonth[k] || 0) + (parseFloat(r[6]) || 0);
   });
   exps.forEach(r => {
-    const d = new Date(r[0]); if (isNaN(d)) return;
+    const d = parseDate(r[0]); if (!d) return;
     const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     expByMonth[k] = (expByMonth[k] || 0) + (parseFloat(r[4]) || 0);
   });
