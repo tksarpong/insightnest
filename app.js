@@ -346,7 +346,7 @@ function showEmptyOrList(type, rows) {
           </div>
         </div>
         <div class="record-meta">
-          <span class="record-date">${esc(r[0] ? r[0].slice(0,10) : '—')}</span>
+          <span class="record-date">${fmtDate(r[0])}</span>
           <span class="record-sub">Qty: ${esc(r[4] || '0')} · ₵${esc(r[3] || '0')} each</span>
         </div>
       </div>`).join('');
@@ -364,7 +364,7 @@ function showEmptyOrList(type, rows) {
           </div>
         </div>
         <div class="record-meta">
-          <span class="record-date">${esc(r[0] ? r[0].slice(0,10) : '—')}</span>
+          <span class="record-date">${fmtDate(r[0])}</span>
           <span class="record-sub">${esc(r[1] || '—')}</span>
         </div>
       </div>`).join('');
@@ -582,6 +582,14 @@ function showToast(msg) {
 
 function fmt(n) {
   return '₵' + Number(n).toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function fmtDate(val) {
+  const d = parseDate(val);
+  if (!d) return '—';
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
 }
 
 function esc(str) {
@@ -853,7 +861,7 @@ function renderUnpaidFollowups(sales) {
         const days = Math.floor((new Date() - new Date(r[0])) / 86400000);
         const urgency = days > 30 ? 'color:var(--red)' : days > 14 ? 'color:var(--amber)' : 'color:var(--text2)';
         return `<tr>
-          <td>${r[0] ? r[0].slice(0,10) : '—'}</td>
+          <td>${fmtDate(r[0])}</td>
           <td class="td-name">${esc(r[1]||'—')}</td>
           <td class="td-name">${esc(r[2]||'—')}</td>
           <td>${fmt(parseFloat(r[6])||0)}</td>
