@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0a1210" id="theme-color-meta">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="InsightNest">
+<link rel="manifest" href="manifest.json">
+<title>InsightNest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="screen active">
+  <div class="login-bg"></div>
+  <div class="login-content">
+    <div class="login-logo">
+      <div class="logo-mark">IN</div>
+      <h1 class="app-name">InsightNest</h1>
+      <p class="app-tagline">Business intelligence, simplified</p>
+    </div>
+    <div class="login-card">
+      <p class="login-desc">Sign in with your Google account to access your business dashboard.</p>
+      <button id="signin-btn" class="btn-google" onclick="handleSignIn()">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.038l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.962L3.964 6.294C4.672 4.167 6.656 3.58 9 3.58z"/></svg>
+        Sign in with Google
+      </button>
+      <p class="login-note">You'll be asked to grant access to your Google Sheets.</p>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app-screen" class="screen">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <div class="logo-mark-sm">IN</div>
+      <span class="topbar-title">InsightNest</span>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-icon btn-theme" onclick="toggleTheme()" title="Toggle light/dark mode" id="theme-btn">
+        <svg id="icon-moon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg id="icon-sun" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <div class="user-avatar" id="user-avatar" title=""></div>
+      <button class="btn-icon" onclick="handleSignOut()" title="Sign out">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- SHEET ID SETUP -->
+  <div id="setup-banner" class="setup-banner hidden">
+    <p>Enter your Google Sheet ID to connect your data</p>
+    <div class="setup-row">
+      <input type="text" id="sheet-id-input" placeholder="Paste your Sheet ID here" />
+      <button onclick="saveSheetId()">Connect</button>
+    </div>
+    <p class="setup-hint">Find it in your Sheet URL: docs.google.com/spreadsheets/d/<strong>[SHEET_ID]</strong>/edit</p>
+  </div>
+
+  <!-- NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="showSection('dashboard')" data-section="dashboard">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Dashboard</span>
+    </button>
+    <button class="nav-btn" onclick="showSection('sales')" data-section="sales">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      <span>Sales</span>
+    </button>
+    <button class="nav-btn" onclick="showSection('expenses')" data-section="expenses">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 1 0 0 7h5a3.5 3.5 0 1 1 0 7H6"/></svg>
+      <span>Expenses</span>
+    </button>
+    <button class="nav-btn" onclick="showSection('analytics')" data-section="analytics">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      <span>Analytics</span>
+    </button>
+    <button class="nav-btn" onclick="showSection('rankings')" data-section="rankings">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <span>Rankings</span>
+    </button>
+    <button class="nav-btn" onclick="showSection('settings')" data-section="settings">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span>Settings</span>
+    </button>
+  </nav>
+
+  <!-- FAB -->
+  <button class="fab" id="fab-btn" onclick="openModal()">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+  </button>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- DASHBOARD -->
+    <section id="section-dashboard" class="section active">
+      <div class="section-header">
+        <h2>Dashboard</h2>
+        <div class="period-selector">
+          <button class="period-badge period-btn" id="dash-period" onclick="togglePeriodMenu()">
+            All time <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="period-menu hidden" id="period-menu">
+            <button onclick="setPeriod('today','Today')">Today</button>
+            <button onclick="setPeriod('week','This week')">This week</button>
+            <button onclick="setPeriod('month','This month')">This month</button>
+            <button onclick="setPeriod('last_month','Last month')">Last month</button>
+            <button onclick="setPeriod('3months','Last 3 months')">Last 3 months</button>
+            <button onclick="setPeriod('6months','Last 6 months')">Last 6 months</button>
+            <button onclick="setPeriod('year','This year')">This year</button>
+            <button onclick="setPeriod('all','All time')">All time</button>
+            <button onclick="openCustomRange('dashboard')">Custom range...</button>
+          </div>
+        </div>
+      </div>
+      <div id="loading-dash" class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading your data...</p>
+      </div>
+      <div id="dash-content" class="hidden">
+        <div class="kpi-grid">
+          <div class="kpi-card accent-green">
+            <div class="kpi-label">Total Revenue</div>
+            <div class="kpi-value" id="kpi-revenue">—</div>
+            <div class="kpi-sub">All invoiced sales</div>
+          </div>
+          <div class="kpi-card accent-red">
+            <div class="kpi-label">Total Expenses</div>
+            <div class="kpi-value" id="kpi-expenses">—</div>
+            <div class="kpi-sub">All recorded costs</div>
+          </div>
+          <div class="kpi-card accent-blue">
+            <div class="kpi-label">Net Profit</div>
+            <div class="kpi-value" id="kpi-profit">—</div>
+            <div class="kpi-sub">Revenue minus costs</div>
+          </div>
+          <div class="kpi-card accent-amber">
+            <div class="kpi-label">Cash Received</div>
+            <div class="kpi-value" id="kpi-received">—</div>
+            <div class="kpi-sub">Paid invoices only</div>
+          </div>
+        </div>
+        <div class="kpi-row">
+          <div class="kpi-card-sm">
+            <div class="kpi-label">Total Orders</div>
+            <div class="kpi-value-sm" id="kpi-orders">—</div>
+          </div>
+          <div class="kpi-card-sm">
+            <div class="kpi-label">Unpaid Sales</div>
+            <div class="kpi-value-sm" id="kpi-unpaid">—</div>
+          </div>
+          <div class="kpi-card-sm">
+            <div class="kpi-label">Total Expenses Count</div>
+            <div class="kpi-value-sm" id="kpi-exp-count">—</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Sales by customer</div>
+          <div id="chart-customer" class="bar-chart"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Sales by product</div>
+          <div id="chart-product" class="bar-chart"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Expenses by category</div>
+          <div id="chart-category" class="bar-chart"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Expense breakdown</div>
+          <div id="expense-pie-wrap" class="pie-wrap"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SALES -->
+    <section id="section-sales" class="section">
+      <div class="section-header">
+        <h2>Sales</h2>
+        <button class="btn-refresh" onclick="loadSales()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div id="loading-sales" class="loading-state">
+        <div class="spinner"></div><p>Loading sales...</p>
+      </div>
+      <div id="sales-list" class="records-list hidden"></div>
+      <div id="sales-empty" class="empty-state hidden">
+        <p>No sales recorded yet.</p>
+        <button onclick="openModal()" class="btn-empty">Record first sale</button>
+      </div>
+    </section>
+
+    <!-- EXPENSES -->
+    <section id="section-expenses" class="section">
+      <div class="section-header">
+        <h2>Expenses</h2>
+        <button class="btn-refresh" onclick="loadExpenses()">
+          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div id="loading-expenses" class="loading-state">
+        <div class="spinner"></div><p>Loading expenses...</p>
+      </div>
+      <div id="expenses-list" class="records-list hidden"></div>
+      <div id="expenses-empty" class="empty-state hidden">
+        <p>No expenses recorded yet.</p>
+        <button onclick="openModal()" class="btn-empty">Record first expense</button>
+      </div>
+    </section>
+
+    <!-- ANALYTICS -->
+    <section id="section-analytics" class="section">
+      <div class="section-header">
+        <h2>Analytics</h2>
+        <div class="period-selector">
+          <button class="period-badge period-btn" id="analytics-period" onclick="toggleAnalyticsPeriodMenu()">
+            All time <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="period-menu hidden" id="analytics-period-menu">
+            <button onclick="setAnalyticsPeriod('today','Today')">Today</button>
+            <button onclick="setAnalyticsPeriod('week','This week')">This week</button>
+            <button onclick="setAnalyticsPeriod('month','This month')">This month</button>
+            <button onclick="setAnalyticsPeriod('last_month','Last month')">Last month</button>
+            <button onclick="setAnalyticsPeriod('3months','Last 3 months')">Last 3 months</button>
+            <button onclick="setAnalyticsPeriod('6months','Last 6 months')">Last 6 months</button>
+            <button onclick="setAnalyticsPeriod('year','This year')">This year</button>
+            <button onclick="setAnalyticsPeriod('all','All time')">All time</button>
+            <button onclick="openCustomRange('analytics')">Custom range...</button>
+          </div>
+        </div>
+      </div>
+      <div id="loading-analytics" class="loading-state">
+        <div class="spinner"></div><p>Loading analytics...</p>
+      </div>
+      <div id="analytics-content" class="hidden">
+        <div class="analytics-growth-row" id="growth-row"></div>
+        <div class="insights-card">
+          <div class="insights-title">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Business insights
+          </div>
+          <div id="insights-list"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-card">
+          <div class="chart-title">Expense breakdown</div>
+          <div id="analytics-pie-wrap" class="pie-wrap"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Monthly revenue vs expenses</div>
+          <div id="monthly-chart" class="monthly-chart-wrap"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Product performance</div>
+          <div id="product-performance"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Customer ranking</div>
+          <div id="customer-ranking"></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">Unpaid invoices — follow up needed</div>
+          <div id="unpaid-list-analytics"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RANKINGS -->
+    <section id="section-rankings" class="section">
+      <div class="section-header">
+        <h2>Rankings</h2>
+      </div>
+
+      <!-- Controls bar -->
+      <div class="rankings-controls">
+        <div class="rankings-ctrl-row">
+          <div class="rank-ctrl-group">
+            <label class="rank-ctrl-label">View</label>
+            <div class="rank-pill-group" id="rank-type-btns">
+              <button class="rank-pill active" onclick="setRankType('customer')">Customers</button>
+              <button class="rank-pill" onclick="setRankType('product')">Products</button>
+              <button class="rank-pill" onclick="setRankType('category')">Expense Categories</button>
+            </div>
+          </div>
+        </div>
+        <div class="rankings-ctrl-row">
+          <div class="rank-ctrl-group">
+            <label class="rank-ctrl-label">Period</label>
+            <div class="period-selector" style="position:relative">
+              <button class="period-badge period-btn" id="rank-period-btn" onclick="toggleRankPeriodMenu()">
+                All time <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+              <div class="period-menu hidden" id="rank-period-menu">
+                <button onclick="setRankPeriod('today','Today')">Today</button>
+                <button onclick="setRankPeriod('week','This week')">This week</button>
+                <button onclick="setRankPeriod('month','This month')">This month</button>
+                <button onclick="setRankPeriod('last_month','Last month')">Last month</button>
+                <button onclick="setRankPeriod('3months','Last 3 months')">Last 3 months</button>
+                <button onclick="setRankPeriod('6months','Last 6 months')">Last 6 months</button>
+                <button onclick="setRankPeriod('year','This year')">This year</button>
+                <button onclick="setRankPeriod('all','All time')">All time</button>
+                <button onclick="openCustomRange('rankings')">Custom range...</button>
+              </div>
+            </div>
+          </div>
+          <div class="rank-ctrl-group">
+            <label class="rank-ctrl-label">Order</label>
+            <div class="rank-pill-group" id="rank-order-btns">
+              <button class="rank-pill active" onclick="setRankOrder('desc')">Highest first</button>
+              <button class="rank-pill" onclick="setRankOrder('asc')">Lowest first</button>
+            </div>
+          </div>
+        </div>
+        <div class="rankings-ctrl-row">
+          <div class="rank-ctrl-group">
+            <label class="rank-ctrl-label">Show top</label>
+            <div class="rank-pill-group">
+              <button class="rank-pill" onclick="setRankLimit(5)">5</button>
+              <button class="rank-pill" onclick="setRankLimit(10)">10</button>
+              <button class="rank-pill" onclick="setRankLimit(20)">20</button>
+              <button class="rank-pill active" onclick="setRankLimit(30)">30</button>
+              <button class="rank-pill" onclick="setRankLimit(50)">50</button>
+              <button class="rank-pill" onclick="setRankLimit(0)">All</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results -->
+      <div id="loading-rankings" class="loading-state hidden">
+        <div class="spinner"></div><p>Loading...</p>
+      </div>
+      <div id="rankings-content" class="chart-card" style="margin-top:12px">
+        <div class="chart-title" id="rankings-title">Customer rankings</div>
+        <div id="rankings-table"></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="section-settings" class="section">
+      <div class="section-header"><h2>Settings</h2></div>
+      <div class="settings-group">
+        <div class="settings-label">Google Sheet ID</div>
+        <input type="text" id="sheet-id-settings" class="settings-input" placeholder="Paste Sheet ID" />
+        <button class="btn-settings-save" onclick="saveSheetId()">Save & Reconnect</button>
+        <p class="settings-hint">Your Sheet ID is the long string in your Sheet URL:<br>docs.google.com/spreadsheets/d/<strong style="color:#a3c47a">[THIS PART]</strong>/edit</p>
+      </div>
+      <div class="settings-group">
+        <div class="settings-label">Products (one per line)</div>
+        <textarea id="products-input" class="settings-textarea" placeholder="Product 1&#10;Product 2&#10;Product 3"></textarea>
+        <button class="btn-settings-save" onclick="saveProducts()">Save Products</button>
+      </div>
+      <div class="settings-group">
+        <div class="settings-label">Expense Categories (one per line)</div>
+        <textarea id="categories-input" class="settings-textarea" placeholder="Rent / Office&#10;Utilities - Water&#10;Salaries / Wages"></textarea>
+        <button class="btn-settings-save" onclick="saveCategories()">Save Categories</button>
+      </div>
+      <div class="settings-group">
+        <div class="settings-label">Account</div>
+        <div class="settings-label">Appearance</div>
+        <div class="theme-toggle-row">
+          <span class="theme-toggle-label" id="theme-label">Dark mode</span>
+          <button class="theme-pill" id="theme-pill" onclick="toggleTheme()">
+            <span class="theme-pill-thumb"></span>
+          </button>
+        </div>
+        <div class="settings-label" style="margin-top:8px">Account</div>
+        <div class="user-info-row">
+          <div class="user-avatar-lg" id="user-avatar-lg"></div>
+          <div>
+            <div id="user-name-settings" class="user-name"></div>
+            <div id="user-email-settings" class="user-email"></div>
+          </div>
+        </div>
+        <button class="btn-signout" onclick="handleSignOut()">Sign out</button>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- MODAL -->
+<div id="modal-overlay" class="modal-overlay hidden" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-tabs">
+        <button class="modal-tab active" onclick="switchTab('sale')" id="tab-sale">New Sale</button>
+        <button class="modal-tab" onclick="switchTab('expense')" id="tab-expense">New Expense</button>
+      </div>
+      <button class="modal-close" onclick="closeModal()">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- SALE FORM -->
+    <div id="form-sale" class="modal-form active">
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="f-date" />
+      </div>
+      <div class="form-group">
+        <label>Customer name</label>
+        <input type="text" id="f-customer" placeholder="e.g. Ama Mensah" />
+      </div>
+      <div class="form-group">
+        <label>Product</label>
+        <select id="f-product"></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Unit price (₵)</label>
+          <input type="number" id="f-price" placeholder="0.00" min="0" step="0.01" oninput="calcTotal()" />
+        </div>
+        <div class="form-group">
+          <label>Quantity</label>
+          <input type="number" id="f-qty" placeholder="1" min="1" oninput="calcTotal()" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Discount (₵)</label>
+        <input type="number" id="f-discount" placeholder="0" min="0" value="0" oninput="calcTotal()" />
+      </div>
+      <div class="total-preview" id="total-preview">Total: ₵0.00</div>
+      <div class="form-group">
+        <label>Payment status</label>
+        <div class="radio-group">
+          <label class="radio-opt"><input type="radio" name="s-status" value="Paid" checked> Paid</label>
+          <label class="radio-opt"><input type="radio" name="s-status" value="Unpaid"> Unpaid</label>
+        </div>
+      </div>
+      <button class="btn-submit" onclick="submitSale()" id="btn-sale-submit">Record Sale</button>
+      <div class="form-msg hidden" id="sale-msg"></div>
+    </div>
+
+    <!-- EXPENSE FORM -->
+    <div id="form-expense" class="modal-form">
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" id="e-date" />
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <input type="text" id="e-desc" placeholder="e.g. Water bill" />
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="e-cat"></select>
+      </div>
+      <div class="form-group">
+        <label>Amount (£)</label>
+        <input type="number" id="e-amount" placeholder="0.00" min="0" step="0.01" />
+      </div>
+      <div class="form-group">
+        <label>Payment method</label>
+        <select id="e-method">
+          <option>Cash</option>
+          <option>Mobile Money Transfer</option>
+          <option>Bank Transfer</option>
+          <option>Card</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Payment status</label>
+        <div class="radio-group">
+          <label class="radio-opt"><input type="radio" name="e-status" value="Paid" checked> Paid</label>
+          <label class="radio-opt"><input type="radio" name="e-status" value="Unpaid"> Unpaid</label>
+        </div>
+      </div>
+      <button class="btn-submit" onclick="submitExpense()" id="btn-exp-submit">Record Expense</button>
+      <div class="form-msg hidden" id="exp-msg"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast hidden"></div>
+
+<!-- Google API -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://apis.google.com/js/api.js" async defer onload="gapiLoaded()"></script>
+<script src="app.js"></script>
+
+<!-- CUSTOM DATE RANGE MODAL -->
+<div id="custom-range-overlay" class="modal-overlay hidden" onclick="closeCustomRange(event)">
+  <div class="modal" style="max-height:auto">
+    <div class="modal-header" style="padding-bottom:1rem">
+      <span style="font-size:15px;font-weight:500;color:var(--text)">Custom date range</span>
+      <button class="modal-close" onclick="document.getElementById('custom-range-overlay').classList.add('hidden')">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem">
+      <input type="hidden" id="custom-range-target" value="dashboard">
+      <div class="form-group">
+        <label>From date</label>
+        <input type="date" id="custom-from" />
+      </div>
+      <div class="form-group">
+        <label>To date</label>
+        <input type="date" id="custom-to" />
+      </div>
+      <button class="btn-submit" onclick="applyCustomRange()">Apply</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
