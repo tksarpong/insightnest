@@ -13,7 +13,7 @@ const SHEET_EXPENSES  = 'Expenses';
 let tokenClient;
 let accessToken = null;
 let sheetId = localStorage.getItem('insightnest_sheet_id') || '';
-let products = JSON.parse(localStorage.getItem('insightnest_products') || '["Product 1","Product 2","Product 3","Product 4","Product 5","Product 6"]');
+let products = JSON.parse(localStorage.getItem('insightnest_products') || '[]');
 let categories = JSON.parse(localStorage.getItem('insightnest_categories') || '["Rent / Office","Utilities - Water","Utilities - Electricity","Salaries / Wages","Marketing","Stationery/Printing","Transport / Delivery","Internet / Airtime","Equipment Maintenance","Bank Charges","Stock Purchase - Laptops & Desktops","Stock Purchase - Accessories","Stock Purchase - Printers & Ink","Stock Purchase - Networking","Stock Purchase - Storage & UPS","Stock Purchase - Other"]');
 let currentSection = 'dashboard';
 let currentTab = 'sale';
@@ -144,6 +144,7 @@ async function onSignedIn(userInfo) {
   populateSelects();
   populateSettingsFields();
   loadDashboard();
+  autoPopulateFromSheet();
 }
 
 async function fetchUserInfo() {
@@ -346,7 +347,7 @@ function showEmptyOrList(type, rows) {
           </div>
         </div>
         <div class="record-meta">
-          <span class="record-date">${fmtDate(r[0])}</span>
+          <span class="record-date">${esc(r[0] ? r[0].slice(0,10) : '—')}</span>
           <span class="record-sub">Qty: ${esc(r[4] || '0')} · ₵${esc(r[3] || '0')} each</span>
         </div>
       </div>`).join('');
@@ -364,7 +365,7 @@ function showEmptyOrList(type, rows) {
           </div>
         </div>
         <div class="record-meta">
-          <span class="record-date">${fmtDate(r[0])}</span>
+          <span class="record-date">${esc(r[0] ? r[0].slice(0,10) : '—')}</span>
           <span class="record-sub">${esc(r[1] || '—')}</span>
         </div>
       </div>`).join('');
@@ -449,6 +450,73 @@ async function submitExpense() {
 }
 
 // ─── SETTINGS ─────────────────────────────────────────────────────────────────
+
+// ─── AUTO-POPULATE SETTINGS FROM SHEET DATA ───────────────────────────────────
+async function autoPopulateFromSheet() {
+  if (!sheetId) return;
+
+  // Only auto-populate if still using defaults
+  const isDefaultProducts = products.length === 0;
+
+  const defaultCategories = ['Rent / Office','Utilities - Water',
+    'Utilities - Electricity','Salaries / Wages','Marketing','Stationery/Printing'];
+  const isDefaultCategories = categories.length <= 6 &&
+    categories.every(c => defaultCategories.includes(c));
+
+  // If both already customised, skip
+  if (!isDefaultProducts && !isDefaultCategories) return;
+
+  try {
+    const [salesRows, expRows] = await Promise.all([
+      sheetsGet(`${SHEET_SALES}!A2:H5000`),
+      sheetsGet(`${SHEET_EXPENSES}!A2:F5000`)
+    ]);
+
+    let changed = false;
+
+    // Extract unique products from Sales column C (index 2)
+    if (isDefaultProducts) {
+      const uniqueProducts = [...new Set(
+        salesRows
+          .filter(r => r && r[2] && String(r[2]).trim())
+          .map(r => String(r[2]).trim())
+      )].sort();
+
+      if (uniqueProducts.length > 0) {
+        products = uniqueProducts;
+        localStorage.setItem('insightnest_products', JSON.stringify(products));
+        changed = true;
+        console.log(`Auto-populated ${products.length} products from Sheet`);
+      }
+    }
+
+    // Extract unique categories from Expenses column D (index 3)
+    if (isDefaultCategories) {
+      const uniqueCategories = [...new Set(
+        expRows
+          .filter(r => r && r[3] && String(r[3]).trim())
+          .map(r => String(r[3]).trim())
+      )].sort();
+
+      if (uniqueCategories.length > 0) {
+        categories = uniqueCategories;
+        localStorage.setItem('insightnest_categories', JSON.stringify(categories));
+        changed = true;
+        console.log(`Auto-populated ${categories.length} categories from Sheet`);
+      }
+    }
+
+    if (changed) {
+      populateSelects();
+      populateSettingsFields();
+      showToast('Products & categories loaded from your Sheet ✓');
+    }
+
+  } catch(e) {
+    console.warn('Auto-populate failed:', e);
+  }
+}
+
 function saveSheetId() {
   const input = document.getElementById('sheet-id-input') || document.getElementById('sheet-id-settings');
   const val = input ? input.value.trim() : '';
@@ -462,6 +530,7 @@ function saveSheetId() {
   showToast('Sheet connected');
   ensureHeaders();
   loadDashboard();
+  autoPopulateFromSheet();
 }
 
 function saveProducts() {
@@ -584,14 +653,6 @@ function fmt(n) {
   return '₵' + Number(n).toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function fmtDate(val) {
-  const d = parseDate(val);
-  if (!d) return '—';
-  return d.getFullYear() + '-' +
-    String(d.getMonth()+1).padStart(2,'0') + '-' +
-    String(d.getDate()).padStart(2,'0');
-}
-
 function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -654,7 +715,7 @@ function renderGrowthRow(sales) {
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-  const thisMonth = sales.filter(r => { const _d = parseDate(r[0]); return _d && new Date(_d.getFullYear(), _d.getMonth(), _d.getDate()) >= thisMonthStart; })
+  const thisMonth = sales.filter(r => new Date(r[0]) >= thisMonthStart)
     .reduce((a, r) => a + (parseFloat(r[6]) || 0), 0);
   const lastMonth = sales.filter(r => {
     const d = new Date(r[0]);
@@ -689,8 +750,8 @@ function renderInsights(sales, exps) {
   // Growth trend
   const months = {};
   sales.forEach(r => {
-    const d = parseDate(r[0]);
-    if (!d) return;
+    const d = new Date(r[0]);
+    if (isNaN(d)) return;
     const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     months[key] = (months[key] || 0) + (parseFloat(r[6]) || 0);
   });
@@ -747,12 +808,12 @@ function renderInsights(sales, exps) {
 function renderMonthlyChart(sales, exps) {
   const revByMonth = {}, expByMonth = {};
   sales.forEach(r => {
-    const d = parseDate(r[0]); if (!d) return;
+    const d = new Date(r[0]); if (isNaN(d)) return;
     const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     revByMonth[k] = (revByMonth[k] || 0) + (parseFloat(r[6]) || 0);
   });
   exps.forEach(r => {
-    const d = parseDate(r[0]); if (!d) return;
+    const d = new Date(r[0]); if (isNaN(d)) return;
     const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     expByMonth[k] = (expByMonth[k] || 0) + (parseFloat(r[4]) || 0);
   });
@@ -861,7 +922,7 @@ function renderUnpaidFollowups(sales) {
         const days = Math.floor((new Date() - new Date(r[0])) / 86400000);
         const urgency = days > 30 ? 'color:var(--red)' : days > 14 ? 'color:var(--amber)' : 'color:var(--text2)';
         return `<tr>
-          <td>${fmtDate(r[0])}</td>
+          <td>${r[0] ? r[0].slice(0,10) : '—'}</td>
           <td class="td-name">${esc(r[1]||'—')}</td>
           <td class="td-name">${esc(r[2]||'—')}</td>
           <td>${fmt(parseFloat(r[6])||0)}</td>
