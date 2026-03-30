@@ -347,7 +347,7 @@ function showEmptyOrList(type, rows) {
           </div>
         </div>
         <div class="record-meta">
-          <span class="record-date">${esc(r[0] ? r[0].slice(0,10) : '—')}</span>
+          <span class="record-date">${fmtDate(r[0])}</span>
           <span class="record-sub">Qty: ${esc(r[4] || '0')} · ₵${esc(r[3] || '0')} each</span>
         </div>
       </div>`).join('');
@@ -365,7 +365,7 @@ function showEmptyOrList(type, rows) {
           </div>
         </div>
         <div class="record-meta">
-          <span class="record-date">${esc(r[0] ? r[0].slice(0,10) : '—')}</span>
+          <span class="record-date">${fmtDate(r[0])}</span>
           <span class="record-sub">${esc(r[1] || '—')}</span>
         </div>
       </div>`).join('');
@@ -653,6 +653,14 @@ function fmt(n) {
   return '₵' + Number(n).toLocaleString('en-GH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function fmtDate(val) {
+  const d = parseDate(val);
+  if (!d) return '—';
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+
 function esc(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -715,11 +723,12 @@ function renderGrowthRow(sales) {
   const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-  const thisMonth = sales.filter(r => new Date(r[0]) >= thisMonthStart)
+  const thisMonth = sales.filter(r => { const _d = parseDate(r[0]); return _d && new Date(_d.getFullYear(),_d.getMonth(),_d.getDate()) >= thisMonthStart; })
     .reduce((a, r) => a + (parseFloat(r[6]) || 0), 0);
   const lastMonth = sales.filter(r => {
-    const d = new Date(r[0]);
-    return d >= lastMonthStart && d < thisMonthStart;
+    const _d = parseDate(r[0]); if (!_d) return false;
+    const _day = new Date(_d.getFullYear(),_d.getMonth(),_d.getDate());
+    return _day >= lastMonthStart && _day < thisMonthStart;
   }).reduce((a, r) => a + (parseFloat(r[6]) || 0), 0);
 
   const growth = lastMonth > 0 ? ((thisMonth - lastMonth) / lastMonth * 100) : null;
@@ -750,8 +759,8 @@ function renderInsights(sales, exps) {
   // Growth trend
   const months = {};
   sales.forEach(r => {
-    const d = new Date(r[0]);
-    if (isNaN(d)) return;
+    const d = parseDate(r[0]);
+    if (!d) return;
     const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     months[key] = (months[key] || 0) + (parseFloat(r[6]) || 0);
   });
@@ -808,12 +817,12 @@ function renderInsights(sales, exps) {
 function renderMonthlyChart(sales, exps) {
   const revByMonth = {}, expByMonth = {};
   sales.forEach(r => {
-    const d = new Date(r[0]); if (isNaN(d)) return;
+    const d = parseDate(r[0]); if (!d) return;
     const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     revByMonth[k] = (revByMonth[k] || 0) + (parseFloat(r[6]) || 0);
   });
   exps.forEach(r => {
-    const d = new Date(r[0]); if (isNaN(d)) return;
+    const d = parseDate(r[0]); if (!d) return;
     const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
     expByMonth[k] = (expByMonth[k] || 0) + (parseFloat(r[4]) || 0);
   });
@@ -922,7 +931,7 @@ function renderUnpaidFollowups(sales) {
         const days = Math.floor((new Date() - new Date(r[0])) / 86400000);
         const urgency = days > 30 ? 'color:var(--red)' : days > 14 ? 'color:var(--amber)' : 'color:var(--text2)';
         return `<tr>
-          <td>${r[0] ? r[0].slice(0,10) : '—'}</td>
+          <td>${fmtDate(r[0])}</td>
           <td class="td-name">${esc(r[1]||'—')}</td>
           <td class="td-name">${esc(r[2]||'—')}</td>
           <td>${fmt(parseFloat(r[6])||0)}</td>
